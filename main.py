@@ -5,14 +5,14 @@ import re
 from datetime import datetime, timedelta
 import sqlite3
 
-# --- CONFIGURAÇÕES DE CORES ---
+
 COR_FUNDO = "#fff8ee"
 COR_AZUL = "#1d4a8b"
 COR_CINZA = "#d9d9d9"
 COR_BOTAO_MENU = "#2a5eb2"
 COR_PROVA = "#ff9800"
 
-# --- FUNÇÕES DE BANCO DE DADOS ---
+
 def conectar():
     return sqlite3.connect("babelup.db")
 
@@ -57,7 +57,6 @@ class BabelUpApp:
         self.tela_login()
 
     def _configurar_scroll_mouse(self, canvas):
-        # Essa é a função que o erro disse que estava faltando
         canvas.bind('<Enter>', lambda _: canvas.bind_all("<MouseWheel>", lambda e: self._on_mousewheel(e, canvas)))
         canvas.bind('<Leave>', lambda _: canvas.unbind_all("<MouseWheel>"))
 
@@ -74,7 +73,6 @@ class BabelUpApp:
         except:
             return None
 
-    # --- MÁSCARAS SIMPLES (Cartão, CVV, etc) ---
     def validar_apenas_letras(self, P):
         return True if P == "" or re.match(r"^[A-Za-zÀ-ÿ\s]+$", P) else False
 
@@ -95,7 +93,6 @@ class BabelUpApp:
         event.widget.delete(0, tk.END)
         event.widget.insert(0, v)
 
-    # --- TELAS INICIAIS ---
     def tela_login(self):
         self.limpar()
         self.root.geometry("500x850")
@@ -226,7 +223,6 @@ class BabelUpApp:
         self.ent_email = criar_campo("EMAIL")
         self.ent_senha = criar_campo("SENHA (MÍN. 8 DÍGITOS)", is_senha=True)
 
-        # --- FUNÇÕES DE MÁSCARA AUTOMÁTICA ---
         def formatar_cpf(event):
             texto = re.sub(r'\D', '', self.ent_cpf.get())[:11]  # Apenas números, max 11
             novo_texto = ""
@@ -248,11 +244,9 @@ class BabelUpApp:
             self.ent_telefone.delete(0, "end")
             self.ent_telefone.insert(0, novo_texto)
 
-        # Vincula as funções aos campos (digitar e formatar na hora)
         self.ent_cpf.bind("<KeyRelease>", formatar_cpf)
         self.ent_telefone.bind("<KeyRelease>", formatar_tel)
 
-        # --- VERIFICAÇÃO FINAL ---
         def verificar_e_ir():
             nome = self.ent_nome.get().strip()
             cpf = self.ent_cpf.get().strip()
@@ -260,7 +254,6 @@ class BabelUpApp:
             email = self.ent_email.get().strip()
             senha = self.ent_senha.get().strip()
 
-            # Validações rápidas
             if not all([nome, cpf, tel, email, senha]):
                 messagebox.showwarning("Erro", "Preencha tudo!")
                 return
@@ -273,7 +266,6 @@ class BabelUpApp:
                 messagebox.showwarning("Erro", "E-mail inválido!")
                 return
 
-            # TRAVA DE BANCO (CPF, Email ou Telefone repetidos)
             try:
                 conn = conectar()
                 c = conn.cursor()
@@ -298,7 +290,6 @@ class BabelUpApp:
             self.user_data = {'nome': nome, 'cpf': cpf, 'telefone': tel, 'email': email, 'senha': senha}
             self.tela_idiomas()
 
-        # --- BOTÕES ---
         tk.Button(f_cad, text="PRÓXIMO", bg=COR_AZUL, fg="white", font=("Arial", 11, "bold"),
                   width=30, height=2, relief="flat", cursor="hand2", command=verificar_e_ir).pack(pady=(15, 5))
 
@@ -314,14 +305,11 @@ class BabelUpApp:
             for w in self.corpo.winfo_children(): w.destroy()
             alvo = self.corpo
 
-        # Recupera a lista mestra ou usa uma padrão caso self.LISTA_MESTRA_IDIOMAS falhe
         lista_mestra = getattr(self, 'LISTA_MESTRA_IDIOMAS',
                                ["Inglês", "Espanhol", "Francês", "Alemão", "Japonês", "Coreano"])
 
-        # Identifica idiomas atuais
         atuais = [i.strip() for i in str(self.user_data.get('idiomas_contratados', '')).split(',') if i.strip()]
 
-        # Filtra disponíveis
         idiomas_disponiveis = [i for i in lista_mestra if i not in atuais]
 
         f_meio = tk.Frame(alvo, bg=COR_FUNDO)
@@ -339,32 +327,26 @@ class BabelUpApp:
                       width=20, command=self.dashboard_aulas).pack(pady=10)
             return
 
-        # Resto da seleção de idiomas...
         tk.Label(f_meio, text="ESCOLHA SEUS IDIOMAS", font=("Arial", 18, "bold"),
                  bg=COR_FUNDO, fg=COR_AZUL).pack(pady=20)
 
         self.vars = {}
 
-        # --- O LOOP SÓ CRIA OS CHECKBUTTONS ---
         for i in idiomas_disponiveis:
             v = tk.BooleanVar()
             tk.Checkbutton(f_meio, text=i, variable=v, bg=COR_FUNDO,
                            font=("Arial", 12)).pack(anchor="w", padx=50)
             self.vars[i] = v
-            # <--- O LOOP TERMINA AQUI (A PARTIR DAQUI NÃO TEM MAIS RECUO)
 
-            # Botão Continuar (FORA DO LOOP)
         tk.Button(f_meio, text="CONTINUAR", bg=COR_AZUL, fg="white", font=("Arial", 11, "bold"),
                   width=20, height=1, command=self.tela_niveis).pack(pady=(30, 0))
 
-        # Função do Voltar
         def acao_voltar():
             if logado:
                 self.dashboard_aulas()
             else:
                 self.tela_cadastro()
 
-        # Botão Voltar (FORA DO LOOP)
         tk.Button(f_meio, text="VOLTAR", bg=COR_CINZA, fg="black", font=("Arial", 11, "bold"),
                   width=20, height=1, relief="flat", cursor="hand2", command=acao_voltar).pack(pady=(5, 10))
 
@@ -431,7 +413,6 @@ class BabelUpApp:
 
         v_l = (self.root.register(self.validar_apenas_letras), '%P')
 
-        # --- ABA CARTÃO ---
         tk.Label(f_card, text="TIPO DE CARTÃO", bg=COR_FUNDO, font=("Arial", 9, "bold")).pack(pady=(10, 0))
         tipo_c = ttk.Combobox(f_card, values=["CRÉDITO", "DÉBITO"], state="readonly", font=("Arial", 10))
         tipo_c.current(0)
@@ -459,30 +440,24 @@ class BabelUpApp:
 
         combo = ttk.Combobox(f_card, state="readonly", width=35, font=("Arial", 10))
 
-        # Substitua a sua função antiga por esta:
         def atualizar_parcelas(event=None):
-            # 'valor' é o montante inicial (ex: 1000.00)
             ops = []
 
             if tipo_c.get() == "DÉBITO" or plano == "MENSAL":
                 ops = [f"1x de R$ {valor:.2f} (Total: R$ {valor:.2f})"]
 
             elif plano == "SEMESTRAL":
-                # Semestral: até 6x sem juros
                 for i in range(1, 7):
                     parc_v = valor / i
                     ops.append(f"{i}x de R$ {parc_v:.2f} s/ juros (Total: R$ {valor:.2f})")
 
             elif plano == "ANUAL":
-                # Anual: até 12x
                 for i in range(1, 13):
                     if i <= 10:
-                        # 1x até 10x sem juros
                         parc_v = valor / i
                         total_f = valor
                         ops.append(f"{i}x de R$ {parc_v:.2f} s/ juros (Total: R$ {total_f:.2f})")
                     else:
-                        # 11x e 12x com juros fixos de 3% sobre o total (1000 -> 1030)
                         total_f = valor * 1.03
                         parc_v = total_f / i
                         ops.append(f"{i}x de R$ {parc_v:.2f} c/ juros (Total: R$ {total_f:.2f})")
@@ -490,9 +465,8 @@ class BabelUpApp:
             combo['values'] = ops
             combo.current(0)
 
-        # O RESTANTE CONTINUA IGUAL ABAIXO:
         tipo_c.bind("<<ComboboxSelected>>", atualizar_parcelas)
-        # ... (o resto do seu código de botões e abas)
+        
         atualizar_parcelas()
         combo.pack(pady=15)
 
@@ -500,12 +474,10 @@ class BabelUpApp:
                   cursor="hand2", width=30,
                   command=lambda: self.finalizar_db("CARTÃO", combo.get())).pack(pady=10, ipady=5)
 
-        # --- ABA PIX ---
         tk.Label(f_pix, text="PAGAMENTO VIA PIX", font=("Arial", 14, "bold"), bg=COR_FUNDO, fg=COR_AZUL).pack(pady=20)
         tk.Button(f_pix, text="GERAR QR CODE", bg="#27ae60", fg="white", font=("Arial", 11, "bold"), relief="flat",
                   cursor="hand2", width=30, command=lambda: self.finalizar_db("PIX", "À VISTA")).pack(pady=20, ipady=5)
 
-        # --- ABA BOLETO ---
         tk.Label(f_bol, text="PAGAMENTO VIA BOLETO", font=("Arial", 14, "bold"), bg=COR_FUNDO, fg=COR_AZUL).pack(
             pady=20)
         tk.Button(f_bol, text="GERAR BOLETO", bg="#27ae60", fg="white", font=("Arial", 11, "bold"), relief="flat",
@@ -527,7 +499,6 @@ class BabelUpApp:
         nv_padrao = self.user_data.get("nivel_selecionado", "Iniciante")
 
         if self.user_data.get('id'):
-            # --- ATUALIZAÇÃO DE USUÁRIO EXISTENTE (LOGADO) ---
             uid = self.user_data['id']
             c.execute("SELECT idiomas_contratados FROM usuarios WHERE id=?", (uid,))
             atual = c.fetchone()[0]
@@ -537,20 +508,16 @@ class BabelUpApp:
             c.execute("UPDATE usuarios SET idiomas_contratados=?, nivel=?, plano=?, data_pagamento=? WHERE id=?",
                       (", ".join(lista_final), niveis_db, plano_escolhido, venc, uid))
         else:
-            # --- NOVO CADASTRO: AQUI É ONDE MORA O PERIGO ---
 
-            # 1. PEGA OS DADOS PARA CONFERIR
             email_c = self.user_data['email']
             cpf_c = self.user_data['cpf']
             tel_c = self.user_data['telefone']
 
-            # 2. CONSULTA SE JÁ EXISTE ALGUM DELES
             c.execute("SELECT email, cpf, telefone FROM usuarios WHERE email=? OR cpf=? OR telefone=?",
                       (email_c, cpf_c, tel_c))
             repetido = c.fetchone()
 
             if repetido:
-                # Se encontrou algo, avisa e fecha a conexão sem fazer o INSERT
                 res_e, res_c, res_t = repetido
                 if res_e == email_c:
                     msg = f"O email {email_c} já está cadastrado!"
@@ -561,9 +528,8 @@ class BabelUpApp:
 
                 messagebox.showerror("Erro de Cadastro", msg)
                 conn.close()
-                return  # SAI DA FUNÇÃO E NÃO SALVA NADA
+                return
 
-            # 3. SE NÃO REPETIU, SEGUE O BAILE
             for idm in novos_idms: self.niveis_por_idioma[idm] = nv_padrao
             niveis_db = "|".join([f"{k}:{v}" for k, v in self.niveis_por_idioma.items()])
             c.execute(
@@ -572,7 +538,6 @@ class BabelUpApp:
                  self.user_data['senha'], ", ".join(novos_idms), plano_escolhido, niveis_db, venc, "Ativo"))
             uid = c.lastrowid
 
-        # CONTINUAÇÃO NORMAL (PAGAMENTO E FINALIZAÇÃO)
         c.execute("INSERT INTO pagamentos (usuario_id, idiomas, plano, valor, metodo, vencimento) VALUES (?,?,?,?,?,?)",
                   (uid, ", ".join(novos_idms), plano_escolhido, self.user_data['valor_final'], f"{met}: {parc}", venc))
         conn.commit()
@@ -613,13 +578,13 @@ class BabelUpApp:
         tk.Button(
             menu,
             text="🚪  SAIR",
-            bg=COR_CINZA,  # Alterado para Cinza
-            fg="black",  # Texto em preto para contraste
+            bg=COR_CINZA,
+            fg="black",
             font=("Arial", 10, "bold"),
             bd=0,
             relief="flat",
             cursor="hand2",
-            activebackground="#bcbcbc",  # Um cinza levemente mais escuro ao clicar
+            activebackground="#bcbcbc",
             command=self.tela_login
         ).pack(side="bottom", fill="x", pady=15, padx=20, ipady=10)
         tk.Button(menu, text="⚠  ENCERRAR CONTA", bg="#e74c3c", fg="white", font=("Arial", 10, "bold"), bd=0,
@@ -731,18 +696,15 @@ class BabelUpApp:
     def mostrar_status_pagamento(self):
         for w in self.corpo.winfo_children(): w.destroy()
 
-        # Título fixo no topo
         header = tk.Frame(self.corpo, bg=COR_FUNDO, padx=30, pady=20)
         header.pack(fill="x")
         tk.Label(header, text="HISTÓRICO DE ASSINATURAS", font=("Arial", 22, "bold"),
                  bg=COR_FUNDO, fg=COR_AZUL).pack(side="left")
 
-        # Área de Scroll responsiva
         canvas = tk.Canvas(self.corpo, bg=COR_FUNDO, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.corpo, orient="vertical", command=canvas.yview)
         scroll_f = tk.Frame(canvas, bg=COR_FUNDO)
 
-        # Função para ajustar a largura dos cards quando a janela mudar de tamanho
         def ajustar_largura_pagamentos(event):
             canvas.itemconfig(window_id, width=event.width)
 
@@ -756,7 +718,6 @@ class BabelUpApp:
         scroll_f.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         self._configurar_scroll_mouse(canvas)
 
-        # Busca no Banco de Dados
         conn = conectar()
         c = conn.cursor()
         c.execute("SELECT idiomas, plano, valor, metodo, vencimento FROM pagamentos WHERE usuario_id=?",
@@ -769,12 +730,10 @@ class BabelUpApp:
                      font=("Arial", 12)).pack(pady=20)
 
         for idms, plano, valor, metodo, venc in compras:
-            # Card que estica com a largura da tela (fill="x")
             f = tk.Frame(scroll_f, bg="white", highlightthickness=1,
                          highlightbackground=COR_CINZA, padx=20, pady=15)
             f.pack(fill="x", pady=10)
 
-            # Layout interno do card (Labels)
             detalhes = [("📚 Idiomas:", idms), ("📅 Plano:", plano),
                         ("💰 Valor:", f"R$ {valor:.2f}"), ("💳 Método:", metodo),
                         ("🔔 Vencimento:", venc)]
@@ -786,7 +745,6 @@ class BabelUpApp:
                          fg=COR_AZUL, width=15, anchor="w").pack(side="left")
                 tk.Label(row, text=f"{val}", font=("Arial", 10), bg="white").pack(side="left")
 
-        # Botão Voltar no final da lista
         tk.Button(scroll_f, text="VOLTAR AO MENU", command=self.dashboard_aulas,
                   bg=COR_CINZA, font=("Arial", 10, "bold"), width=20).pack(pady=30)
 
@@ -867,15 +825,12 @@ class BabelUpApp:
         tk.Button(f_conteudo, text="VOLTAR", command=self.dashboard_aulas, bg=COR_CINZA, font=("Arial", 10, "bold"),
                   relief="flat", cursor="hand2", width=15).pack(pady=10, anchor="w")
 
-    def tela_encerrar_conta(self):
-        # Limpa tudo que existe na tela antes de desenhar
+    def tela_encerrar_conta(self)
         for w in self.corpo.winfo_children(): w.destroy()
 
-        # Frame centralizado (estilo Feedback)
         f_feedback_style = tk.Frame(self.corpo, bg=COR_FUNDO)
         f_feedback_style.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Título chamativo
         tk.Label(f_feedback_style, text="SENTIREMOS SUA FALTA!", font=("Arial", 16, "bold"),
                  bg=COR_FUNDO, fg=COR_AZUL).pack(pady=(0, 10))
 
@@ -883,12 +838,10 @@ class BabelUpApp:
                  text="Pode nos dizer por que está encerrando a conta?\nSeu feedback é muito importante para nós.",
                  font=("Arial", 10), bg=COR_FUNDO, fg="#555").pack(pady=5)
 
-        # Caixa de texto (Text Area) idêntica à de feedback
         txt_motivo = tk.Text(f_feedback_style, width=45, height=8, font=("Arial", 10),
                              relief="solid", bd=1, padx=10, pady=10)
         txt_motivo.pack(pady=20)
 
-        # Função de lógica interna
         def confirmar():
             motivo = txt_motivo.get("1.0", tk.END).strip()
             if len(motivo) < 5:
@@ -897,7 +850,7 @@ class BabelUpApp:
 
             if messagebox.askyesno("Confirmar", "Isso apagará seu progresso permanentemente. Continuar?"):
                 try:
-                    conn = conectar()  # Certifique-se que essa função existe no seu código
+                    conn = conectar()
                     c = conn.cursor()
                     c.execute("DELETE FROM usuarios WHERE id = ?", (self.user_data['id'],))
                     conn.commit()
@@ -908,30 +861,25 @@ class BabelUpApp:
                 except Exception as e:
                     messagebox.showerror("Erro", f"Erro ao processar: {e}")
 
-        # Botão de Enviar/Confirmar (Vermelho padrão de alerta)
         btn_confirmar = tk.Button(f_feedback_style, text="ENCERRAR MINHA CONTA",
                                   bg="#e74c3c", fg="white", font=("Arial", 10, "bold"),
                                   width=30, height=2, relief="flat", cursor="hand2",
                                   command=confirmar)
         btn_confirmar.pack(pady=5)
 
-        # Botão Voltar (Cinza discreto)
         btn_voltar = tk.Button(f_feedback_style, text="CANCELAR E VOLTAR",
                                bg=COR_CINZA, fg="black", font=("Arial", 10),
                                width=30, height=1, relief="flat", cursor="hand2",
                                command=self.dashboard_aulas)
         btn_voltar.pack(pady=10)
 
-    # A FUNÇÃO DE LÓGICA (Onde estava o erro da imagem)
     def acao_confirmar_encerramento(self, txt_motivo):
-        # Pegamos o texto da caixa de texto
         motivo = txt_motivo.get("1.0", tk.END).strip()
 
         if len(motivo) < 5:
             messagebox.showwarning("Atenção", "Diga o motivo.")
             return
 
-        # Aqui você pode salvar o motivo no banco se quiser antes de deletar
         try:
             conn = conectar()
             c = conn.cursor()
@@ -960,14 +908,11 @@ class BabelUpApp:
         frame_canvas = tk.Frame(f_conteudo, bg=COR_FUNDO)
         frame_canvas.pack(fill="both", expand=True)
 
-        # 2. Cria o Canvas e a Barra
         canvas = tk.Canvas(frame_canvas, bg=COR_FUNDO, highlightthickness=0)
         scrollbar = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
 
-        # 3. Cria o "Papel" (Frame) que fica dentro do Canvas
         scrollable_frame = tk.Frame(canvas, bg=COR_FUNDO)
 
-        # --- AQUI ENTRA O QUE VOCÊ COPIOU ---
         canvas.bind('<Enter>', lambda _: canvas.bind_all("<MouseWheel>", lambda e: self._on_mousewheel(e, canvas)))
         canvas.bind('<Leave>', lambda _: canvas.unbind_all("<MouseWheel>"))
 
@@ -981,7 +926,6 @@ class BabelUpApp:
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        # --------------------------
         scrollbar = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=COR_FUNDO)
 
