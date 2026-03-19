@@ -825,7 +825,7 @@ class BabelUpApp:
         tk.Button(f_conteudo, text="VOLTAR", command=self.dashboard_aulas, bg=COR_CINZA, font=("Arial", 10, "bold"),
                   relief="flat", cursor="hand2", width=15).pack(pady=10, anchor="w")
 
-    def tela_encerrar_conta(self)
+    def tela_encerrar_conta(self):
         for w in self.corpo.winfo_children(): w.destroy()
 
         f_feedback_style = tk.Frame(self.corpo, bg=COR_FUNDO)
